@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthBox — Anonymous Q&A</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg1: #0f172a;
+            --bg2: #0b1226;
+            --card: #0f172a;
+            --glass: rgba(255, 255, 255, 0.06);
+            --accent1: #7c5cff;
+            --accent2: #00d4ff;
+            --muted: rgba(255, 255, 255, 0.65);
+            --glass-2: rgba(255, 255, 255, 0.03);
+            --success: #22c55e;
+            --danger: #ff4757;
+            --radius: 18px;
+            --shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+            --text-primary: #e6eef8;
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        /* Base Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(180deg, var(--bg1), var(--bg2));
+            color: var(--text-primary);
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        /* Layout */
+        .wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Background Animation */
+        .bg-anim {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(20rem 20rem at 10% 20%, rgba(124, 92, 255, 0.14), transparent 8%),
+                        radial-gradient(18rem 18rem at 80% 80%, rgba(0, 212, 255, 0.08), transparent 10%);
+            animation: drift 12s ease-in-out infinite alternate;
+            filter: blur(30px);
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-40px) scale(1.06); }
+        }
+
+        /* Particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            opacity: .08;
+            pointer-events: none;
+            z-index: 0;
+            mix-blend-mode: screen;
+        }
+
+        /* Main Card */
+        .card {
+            width: 100%;
+            max-width: 980px;
+            border-radius: var(--radius);
+            padding: 26px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(6px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 20px;
+            align-items: start;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Responsive */
+        @media (max-width: 980px) {
+            .card {
+                grid-template-columns: 1fr;
+                padding: 18px;
+            }
+            .side {
+                order: 3;
+            }
+        }
+
+        /* Branding */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #021124;
+            font-size: 20px;
+            box-shadow: 0 8px 20px rgba(124, 92, 255, 0.12);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h1 {
+            font-family: "Poppins", sans-serif;
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .lead {
+            margin: 6px 0 18px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Input Area */
+        .input-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.01));
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 170px;
+            resize: vertical;
+            max-height: 38vh;
+            border-radius: 12px;
+            padding: 16px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(0, 0, 0, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 15px;
+            line-height: 1.45;
+            outline: none;
+            caret-color: var(--accent2);
+            transition: box-shadow .18s ease, transform .12s ease;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            box-shadow: 0 8px 30px rgba(124, 92, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Buttons & Actions */
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            border: none;
+            padding: 10px 16px;
+            border-radius: 12px;
+            color: #021124;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(124, 92, 255, 0.12), inset 0 -2px 6px rgba(255, 255, 255, 0.06);
+            transition: transform .14s cubic-bezier(.2, .9, .3, 1), box-shadow .14s;
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-4px);
+        }
+
+        .btn.ghost {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: none;
+            font-weight: 600;
+        }
+
+        .btn.small {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 10px;
+        }
+
+        .btn.danger {
+            background: linear-gradient(90deg, var(--danger), #ff6b81);
+        }
+
+        /* Share Link */
+        .share-link {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        /* Side Panel */
+        .side {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.01));
+            padding: 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            height: 100%;
+        }
+
+        .profile {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            font-weight: 800;
+            color: var(--accent1);
+            font-family: "Poppins";
+        }
+
+        .meta small {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .meta h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .meta .link {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: var(--glass-2);
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        /* Stats */
+        .stats {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(0, 0, 0, 0.02));
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .stat p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.45));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 22px;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .28s ease;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .thanks {
+            background: linear-gradient(135deg, #07203c, #062230);
+            border-radius: 14px;
+            padding: 26px;
+            text-align: center;
+            width: min(520px, 92%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transform: translateY(6px);
+            animation: pop .36s cubic-bezier(.16, .8, .24, 1);
+        }
+
+        @keyframes pop {
+            from {
+                transform: translateY(10px) scale(.98);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .check {
+            width: 84px;
+            height: 84px;
+            border-radius: 24px;
+            margin: 0 auto 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent2), var(--accent1));
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .check svg {
+            filter: drop-shadow(0 6px 12px rgba(124, 92, 255, 0.14));
+            transform: scale(.95);
+        }
+
+        .thanks h2 {
+            margin: 6px 0 0;
+            font-size: 20px;
+        }
+
+        .thanks p {
+            color: var(--muted);
+            margin: 8px 0 16px;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        /* Messages View */
+        .view-header {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .messages {
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.00));
+            border-radius: 12px;
+            max-height: 60vh;
+            overflow: auto;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .bubble {
+            max-width: 82%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin: 10px 6px;
+            display: inline-block;
+            line-height: 1.4;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.45);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bubble.self {
+            margin-left: auto;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            color: #021124;
+            font-weight: 600;
+        }
+
+        .meta-time {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: var(--muted);
+            margin-top: 18px;
+            font-size: 13px;
+            opacity: .95;
+        }
+
+        footer strong {
+            color: var(--accent2);
+            font-weight: 700;
+        }
+
+        /* Utilities */
+        .muted {
+            color: var(--muted);
+        }
+
+        .copy-ok {
+            font-size: 13px;
+            color: var(--success);
+            margin-left: 6px;
+        }
+
+        .nolink {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .emoji {
+            font-size: 1.2rem;
+            animation: pulse 1.5s ease infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-anim"></div>
+    
+    <!-- Floating particles -->
+    <div class="particle" style="width:80px;height:80px;left:6%;top:12%;background:radial-gradient(circle,var(--accent1),transparent)"></div>
+    <div class="particle" style="width:110px;height:110px;left:78%;top:72%;background:radial-gradient(circle,var(--accent2),transparent)"></div>
+
+    <div class="wrap">
+        <div class="card" id="mainCard">
+            <!-- LEFT: input and view toggles -->
+            <div>
+                <div class="brand">
+                    <div class="logo" id="logo">TB</div>
+                    <div>
+                        <h1 id="siteTitle">TruthBox</h1>
+                        <p class="lead">Ask anything — totally anonymous. No sign-up. No traces. Keep it real.</p>
+                    </div>
+                </div>
+
+                <div class="input-card" aria-live="polite">
+                    <label for="qbox" style="display:block;margin-bottom:8px;font-weight:600">Your anonymous question</label>
+                    <textarea id="qbox" placeholder="Type your question or message here… keep it short & spicy if you want ✨"></textarea>
+
+                    <div class="actions">
+                        <button class="btn" id="sendBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.9">
+                                <path d="M22 2L11 13" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg> 
+                            Send
+                        </button>
+
+                        <button class="btn ghost small" id="shareStatusBtn" title="Share to WhatsApp (open share dialog)">
+                            Share to WhatsApp Status
+                        </button>
+
+                        <div class="share-link">
+                            <div class="chip" id="sharePreview">mywebsite.com/victor404</div>
+                            <button class="btn ghost small" id="copyLinkBtn">Copy Link</button>
+                            <button class="btn small" id="shareWhatsBtn">Share Link</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+                        <small class="muted">Identity: <strong style="margin-left:6px">Hidden</strong></small>
+                        <small style="margin-left:auto;color:var(--muted)">(stored locally)</small>
+                    </div>
+                </div>
+
+                <!-- View messages area -->
+                <div style="margin-top:18px">
+                    <div class="view-header">
+                        <div>
+                            <h3 style="margin:0">View received questions</h3>
+                            <small class="muted">Your saved anonymous submissions (localStorage)</small>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <button class="btn ghost small" id="refreshView">Refresh</button>
+                            <button class="btn small danger" id="clearAll">Clear All</button>
+                        </div>
+                    </div>
+
+                    <div class="messages" id="messages">
+                        <!-- Messages inserted here -->
+                        <div class="muted" style="padding:18px;text-align:center">No questions yet — they'll appear here after people send them.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: profile + stats -->
+            <aside class="side">
+                <div class="profile">
+                    <div class="avatar" id="avatar">V4</div>
+                    <div class="meta">
+                        <h3 id="profileName">victor404</h3>
+                        <small class="muted">Public profile: <span id="profileLink">mywebsite.com/victor404</span></small>
+                        <div class="link">
+                            <div class="chip">Anonymous by default</div>
+                            <div class="chip" id="totalCount">0 received</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats" style="margin-top:18px">
+                    <div class="stat">
+                        <h4 id="statToday">0</h4>
+                        <p class="muted">This session</p>
+                    </div>
+                    <div class="stat">
+                        <h4 id="statTotal">0</h4>
+                        <p class="muted">All-time (local)</p>
+                    </div>
+                    <div class="stat">
+                        <h4 id="statLast">—</h4>
+                        <p class="muted">Last received</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:18px;font-size:13px;color:var(--muted)">
+                    <strong>Quick tips</strong>
+                    <ul style="margin:10px 0 0;padding-left:18px;color:var(--muted);line-height:1.5">
+                        <li>Change site/profile slug in code (top vars) to customize link.</li>
+                        <li>Use "Share Link" to send your profile on WhatsApp.</li>
+                        <li>Data is stored only in your browser (localStorage).</li>
+                    </ul>
+                </div>
+
+                <footer>
+                    <div style="margin-top:18px">Made with <span class="emoji">❤️</span> by <strong>Victor404</strong></div>
+                </footer>
+            </aside>
+
+            <!-- Overlay thanks -->
+            <div class="overlay" id="overlay">
+                <div class="thanks" role="status" aria-live="polite">
+                    <div class="check" id="checkWrap">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 6L9 17l-5-5" stroke="#021124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h2>Thank you — your question is anonymous</h2>
+                    <p>We saved your message locally. Share your profile link to get answers from others!</p>
+                    <div style="display:flex;gap:8px; justify-content:center; margin-top:12px">
+                        <button class="btn small" id="overlayClose">Close</button>
+                        <button class="btn ghost small" id="overlayShare">Share Link</button>
+                    </div>
+                </div>
+                <div class="confetti" id="confetti"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*
+          Enhanced TruthBox — single-file app
+          Combines the best features from both versions with improved UI/UX
+        */
+        (() => {
+            // === CONFIG - change these if you want to rename the site/profile quickly ===
+            const SITE_NAME = "TruthBox";         // visible site name
+            const PROFILE_SLUG = "victor404";     // used to simulate profile link mywebsite.com/slug
+            const STORAGE_KEY = "truthbox_" + PROFILE_SLUG + "_questions"; // localStorage key
+            const SITE_BASE = "https://mywebsite.com"; // change to actual domain later
+
+            // === UI references ===
+            const siteTitle = document.getElementById('siteTitle');
+            const logo = document.getElementById('logo');
+            const avatar = document.getElementById('avatar');
+            const profileName = document.getElementById('profileName');
+            const profileLink = document.getElementById('profileLink');
+            const sharePreview = document.getElementById('sharePreview');
+            const qbox = document.getElementById('qbox');
+            const sendBtn = document.getElementById('sendBtn');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const shareWhatsBtn = document.getElementById('shareWhatsBtn');
+            const shareStatusBtn = document.getElementById('shareStatusBtn');
+            const messagesEl = document.getElementById('messages');
+            const totalCount = document.getElementById('totalCount');
+            const statTotal = document.getElementById('statTotal');
+            const statToday = document.getElementById('statToday');
+            const statLast = document.getElementById('statLast');
+            const overlay = document.getElementById('overlay');
+            const overlayClose = document.getElementById('overlayClose');
+            const overlayShare = document.getElementById('overlayShare');
+            const clearAll = document.getElementById('clearAll');
+            const refreshView = document.getElementById('refreshView');
+            const confettiEl = document.getElementById('confetti');
+
+            // Initialize UI with config
+            siteTitle.textContent = SITE_NAME;
+            logo.textContent = SITE_NAME.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
+            avatar.textContent = PROFILE_SLUG.slice(0, 3).toUpperCase();
+            profileName.textContent = PROFILE_SLUG;
+            profileLink.textContent = SITE_BASE + "/" + PROFILE_SLUG;
+            sharePreview.textContent = SITE_BASE + "/" + PROFILE_SLUG;
+
+            // Helper: Get stored questions array
+            function getStored() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return [];
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed;
+                } catch (e) {
+                    console.warn(e);
+                    return [];
+                }
+            }
+
+            // Helper: Save questions
+            function saveStored(arr) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+            }
+
+            // Format time nicely
+            function niceTime(ts) {
+                const d = new Date(ts);
+                return d.toLocaleString();
+            }
+
+            // Render messages to view
+            function renderMessages() {
+                const arr = getStored();
+                messagesEl.innerHTML = "";
+                
+                if (!arr.length) {
+                    messagesEl.innerHTML = '<div class="muted" style="padding:18px;text-align:center">No questions yet — they will appear here.</div>';
+                    totalCount.textContent = '0 received';
+                    statTotal.textContent = '0';
+                    statToday.textContent = '0';
+                    statLast.textContent = '—';
+                    return;
+                }
+
+                // Create message bubbles
+                arr.slice().reverse().forEach(item => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    bubble.innerHTML = `<div>${escapeHtml(item.text)}</div><div class="meta-time muted">${niceTime(item.ts)}</div>`;
+                    messagesEl.appendChild(bubble);
+                });
+
+                // Update stats
+                totalCount.textContent = arr.length + ' received';
+                statTotal.textContent = arr.length;
+                statLast.textContent = niceTime(arr[arr.length - 1].ts);
+                
+                // Today count
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayCount = arr.filter(i => i.ts >= todayStart.getTime()).length;
+                statToday.textContent = todayCount;
+            }
+
+            // Escape HTML (security)
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, function(m) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    }[m];
+                });
+            }
+
+            // Send message
+            sendBtn.addEventListener('click', () => {
+                const text = qbox.value.trim();
+                if (!text) {
+                    qbox.focus();
+                    qbox.style.boxShadow = "0 8px 30px rgba(255,80,80,0.08)";
+                    setTimeout(() => qbox.style.boxShadow = "", 900);
+                    return;
+                }
+                
+                // Store anonymous message (no identity)
+                const arr = getStored();
+                arr.push({
+                    text: text,
+                    ts: Date.now()
+                });
+                saveStored(arr);
+
+                // Reset input
+                qbox.value = "";
+
+                // Show thanks overlay + confetti
+                showOverlay();
+
+                // Refresh view
+                renderMessages();
+            });
+
+            // Copy profile link
+            copyLinkBtn.addEventListener('click', async () => {
+                const link = SITE_BASE + "/" + PROFILE_SLUG;
+                try {
+                    await navigator.clipboard.writeText(link);
+                    copyLinkBtn.textContent = 'Copied!';
+                    setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 1400);
+                } catch (e) {
+                    // Fallback for older browsers
+                    const tmp = document.createElement('textarea');
+                    tmp.value = link;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    copyLinkBtn.textContent = 'Copied!';
+                    setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 1400);
+                }
+            });
+
+            // Share profile via WhatsApp
+            shareWhatsBtn.addEventListener('click', () => {
+                const link = SITE_BASE + "/" + PROFILE_SLUG;
+                const text = encodeURIComponent("Check my TruthBox profile: " + link);
+                const wa = "https://api.whatsapp.com/send?text=" + text;
+                window.open(wa, '_blank');
+            });
+
+            // Share text to WhatsApp status
+            shareStatusBtn.addEventListener('click', () => {
+                const text = qbox.value.trim();
+                if (!text) {
+                    qbox.focus();
+                    return;
+                }
+                const encoded = encodeURIComponent(text + "\n\n— sent anonymously via " + SITE_NAME);
+                const wa = "https://api.whatsapp.com/send?text=" + encoded;
+                window.open(wa, '_blank');
+            });
+
+            // Overlay controls
+            overlayClose.addEventListener('click', () => hideOverlay());
+            overlayShare.addEventListener('click', () => {
+                const link = SITE_BASE + "/" + PROFILE_SLUG;
+                const text = encodeURIComponent("Find my anonymous Q&A: " + link);
+                window.open("https://api.whatsapp.com/send?text=" + text, '_blank');
+            });
+
+            // Clear all messages
+            clearAll.addEventListener('click', () => {
+                if (!confirm('Clear all saved anonymous questions from this browser? This cannot be undone.')) return;
+                localStorage.removeItem(STORAGE_KEY);
+                renderMessages();
+            });
+
+            // Refresh view
+            refreshView.addEventListener('click', renderMessages);
+
+            // Overlay animation + confetti
+            function showOverlay() {
+                overlay.classList.add('show');
+                launchConfetti();
+                // Hide after 4.2s automatically
+                setTimeout(() => {
+                    overlay.classList.remove('show');
+                }, 4200);
+            }
+
+            function hideOverlay() {
+                overlay.classList.remove('show');
+            }
+
+            // Confetti effect
+            function launchConfetti() {
+                confettiEl.innerHTML = '';
+                const colors = ['#7c5cff', '#00d4ff', '#ff8ab3', '#ffd166', '#7ee787'];
+                
+                for (let i = 0; i < 22; i++) {
+                    const el = document.createElement('div');
+                    const size = 6 + Math.random() * 12;
+                    el.style.width = size + 'px';
+                    el.style.height = Math.max(4, size / 2) + 'px';
+                    el.style.position = 'absolute';
+                    el.style.left = (30 + Math.random() * 60) + '%';
+                    el.style.top = (30 + Math.random() * 20) + '%';
+                    el.style.opacity = 0.95;
+                    el.style.borderRadius = '3px';
+                    el.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    el.style.background = colors[i % colors.length];
+                    confettiEl.appendChild(el);
+                    
+                    // Animate individual pieces
+                    animateConfetti(el);
+                }
+                
+                // Remove after animation completes
+                setTimeout(() => confettiEl.innerHTML = '', 3800);
+            }
+
+            function animateConfetti(el) {
+                const dx = (Math.random() - 0.5) * 300;
+                const dy = 120 + Math.random() * 240;
+                el.animate([
+                    { transform: el.style.transform + ' translateY(0) translateX(0) scale(1)', opacity: 1 },
+                    { transform: el.style.transform + ` translateY(${dy}px) translateX(${dx}px) rotate(360deg) scale(.9)`, opacity: 0.02 }
+                ], {
+                    duration: 1800 + Math.random() * 1600,
+                    easing: 'cubic-bezier(.2,.7,.2,1)',
+                    iterations: 1
+                });
+            }
+
+            // Keyboard shortcut: Ctrl+Enter to send
+            qbox.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    sendBtn.click();
+                }
+            });
+
+            // UX: Show copy confirmation when clicking preview
+            sharePreview.addEventListener('click', async () => {
+                const link = SITE_BASE + "/" + PROFILE_SLUG;
+                try {
+                    await navigator.clipboard.writeText(link);
+                    sharePreview.textContent = 'Link copied!';
+                    setTimeout(() => sharePreview.textContent = link, 1600);
+                } catch (e) {}
+            });
+
+            // Small performance: lazy load animated shape behind logo
+            setTimeout(() => {
+                const g = document.createElement('div');
+                g.style.width = '44px';
+                g.style.height = '44px';
+                g.style.borderRadius = '10px';
+                g.style.position = 'absolute';
+                g.style.left = '20px';
+                g.style.top = '20px';
+                g.style.opacity = '0.06';
+                g.style.background = 'conic-gradient(from 160deg, rgba(124,92,255,0.9), rgba(0,212,255,0.9))';
+                document.body.appendChild(g);
+                g.animate([
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.14)' }
+                ], {
+                    duration: 8000,
+                    iterations: Infinity,
+                    direction: 'alternate'
+                });
+                setTimeout(() => g.remove(), 9000);
+            }, 1000);
+
+            // Accessibility: Close overlay on Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') hideOverlay();
+            });
+
+            // Performance: Pre-binding touchstart for mobile
+            document.addEventListener('touchstart', () => {}, { passive: true });
+
+            // Progressive enhancement: Drag and drop to paste text
+            qbox.addEventListener('drop', (ev) => {
+                ev.preventDefault();
+                const t = ev.dataTransfer.getData('text/plain');
+                if (t) qbox.value = (qbox.value + "\n" + t).trim();
+            });
+            qbox.addEventListener('dragover', (ev) => ev.preventDefault());
+
+            // Initial render
+            renderMessages();
+
+            // Expose quick dev helper on window for debugging
+            window.__truthbox = {
+                STORAGE_KEY,
+                SITE_NAME,
+                PROFILE_SLUG,
+                SITE_BASE,
+                getStored,
+                saveStored,
+                renderMessages
+            };
+        })();
+    </script>
+</body>
+</html>
