@@ -1,957 +1,649 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TruthBox — Anonymous Q&A</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg1: #0f172a;
-            --bg2: #0b1226;
-            --card: #0f172a;
-            --glass: rgba(255, 255, 255, 0.06);
-            --accent1: #7c5cff;
-            --accent2: #00d4ff;
-            --muted: rgba(255, 255, 255, 0.65);
-            --glass-2: rgba(255, 255, 255, 0.03);
-            --success: #22c55e;
-            --danger: #ff4757;
-            --radius: 18px;
-            --shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
-            --text-primary: #e6eef8;
-            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TruthBox — Anonymous Q&amp;A</title>
 
-        /* Base Styles */
-        html, body {
-            height: 100%;
-            margin: 0;
-            background: linear-gradient(180deg, var(--bg1), var(--bg2));
-            color: var(--text-primary);
-            overflow-y: auto;
-            line-height: 1.5;
-        }
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@300;400;600;700&family=Fredoka+One&display=swap" rel="stylesheet">
 
-        /* Layout */
-        .wrap {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            position: relative;
-            z-index: 2;
-        }
+<style>
+/* ===================== THEME & RESET ===================== */
+:root{
+  --bg-1: #0b1226;
+  --bg-2: #0f172a;
+  --accent1:#7c5cff;
+  --accent2:#00d4ff;
+  --accent3:#fd79a8;
+  --glass: rgba(255,255,255,0.04);
+  --muted: rgba(255,255,255,0.72);
+  --success:#22c55e;
+  --card-radius:18px;
+  --shadow: 0 10px 30px rgba(2,6,23,0.6);
+  --glass-2: rgba(255,255,255,0.02);
+  --domain-tint: rgba(255,255,255,0.06);
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Inter", sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  min-height:100vh;
+  background: linear-gradient(120deg, #0b1226 0%, #051228 45%, #071a2a 100%);
+  color:#e6eef8;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-y:auto;
+}
 
-        /* Background Animation */
-        .bg-anim {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background: radial-gradient(20rem 20rem at 10% 20%, rgba(124, 92, 255, 0.14), transparent 8%),
-                        radial-gradient(18rem 18rem at 80% 80%, rgba(0, 212, 255, 0.08), transparent 10%);
-            animation: drift 12s ease-in-out infinite alternate;
-            filter: blur(30px);
-        }
+/* ===================== ANIMATED BACKGROUNDS ===================== */
+.bg-animated {
+  position:fixed; inset:0; z-index:-3; pointer-events:none;
+  background:
+    radial-gradient(600px 600px at 8% 12%, rgba(124,92,255,0.12), transparent 10%),
+    radial-gradient(420px 420px at 88% 84%, rgba(0,212,255,0.09), transparent 8%),
+    linear-gradient(90deg, rgba(7,18,35,0.95), rgba(2,8,20,0.96));
+  filter: blur(28px); animation: drift 10s ease-in-out infinite alternate;
+}
+@keyframes drift{from{transform:translateY(0) scale(1)} to{transform:translateY(-38px) scale(1.04)}}
 
-        @keyframes drift {
-            0% { transform: translateY(0) scale(1); }
-            100% { transform: translateY(-40px) scale(1.06); }
-        }
+/* particles layer (deepseek style) */
+.particles { position: fixed; inset:0; z-index:-2; pointer-events:none; overflow:hidden }
+.particle { position:absolute; border-radius:50%; background:rgba(255,255,255,0.06); mix-blend-mode:screen; }
 
-        /* Particles */
-        .particle {
-            position: fixed;
-            border-radius: 50%;
-            opacity: .08;
-            pointer-events: none;
-            z-index: 0;
-            mix-blend-mode: screen;
-        }
+/* gradient ribbon */
+.ribbon {
+  position:fixed; top:8%; left:-10%; width:120%; height:30vh; z-index:-1; pointer-events:none;
+  background: linear-gradient(90deg, rgba(124,92,255,0.12), rgba(0,212,255,0.08), rgba(253,121,168,0.06));
+  transform: rotate(-6deg) scale(1.06);
+  filter: blur(40px);
+  opacity:0.95;
+}
 
-        /* Main Card */
-        .card {
-            width: 100%;
-            max-width: 980px;
-            border-radius: var(--radius);
-            padding: 26px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(6px) saturate(140%);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            gap: 20px;
-            align-items: start;
-            position: relative;
-            z-index: 2;
-        }
+/* ===================== LAYOUT ===================== */
+.container{
+  max-width:1100px; margin:40px auto; padding:20px; position:relative; z-index:2;
+}
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:22px; padding:20px; box-shadow:var(--shadow); border:1px solid rgba(255,255,255,0.03);
+}
 
-        /* Responsive */
-        @media (max-width: 980px) {
-            .card {
-                grid-template-columns: 1fr;
-                padding: 18px;
-            }
-            .side {
-                order: 3;
-            }
-        }
+/* two-column layout */
+.grid {
+  display:grid; grid-template-columns: 1fr 380px; gap:18px; align-items:start;
+}
+@media (max-width:980px){ .grid{ grid-template-columns:1fr } }
 
-        /* Branding */
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 8px;
-        }
+/* header */
+.header {
+  text-align:center; margin-bottom:18px;
+}
+.logo {
+  font-family: 'Fredoka One', cursive; font-size:2.6rem; display:inline-block;
+  background: linear-gradient(90deg,#fff,#a29bfe); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow: 0 6px 28px rgba(20,20,30,0.25);
+}
+.tagline { color:var(--muted); margin-top:6px; font-size:14px }
 
-        .logo {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent1), var(--accent2));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            color: #021124;
-            font-size: 20px;
-            box-shadow: 0 8px 20px rgba(124, 92, 255, 0.12);
-            font-family: 'Poppins', sans-serif;
-        }
+/* left column: ask & view */
+.left {
+  display:flex; flex-direction:column; gap:16px;
+}
 
-        h1 {
-            font-family: "Poppins", sans-serif;
-            margin: 0;
-            font-size: 20px;
-            letter-spacing: -0.3px;
-        }
+/* big input area */
+.input-area {
+  padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+}
+.input-area label{display:block;font-weight:700;margin-bottom:8px}
+textarea#question-input{
+  width:100%; min-height:180px; resize:vertical; max-height:46vh;
+  padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);
+  background:transparent; color: #eaf3ff; font-size:15px; line-height:1.5; outline:none;
+  transition:box-shadow .15s, transform .12s;
+}
+textarea#question-input:focus { box-shadow:0 10px 30px rgba(124,92,255,0.06); transform:translateY(-3px) }
 
-        .lead {
-            margin: 6px 0 18px;
-            color: var(--muted);
-            font-size: 13px;
-        }
+/* buttons */
+.btn {
+  display:inline-flex; gap:10px; align-items:center; justify-content:center;
+  padding:10px 14px; border-radius:12px; border:none; cursor:pointer; font-weight:700;
+  transition: transform .12s cubic-bezier(.2,.9,.3,1), box-shadow .12s;
+}
+.btn-primary {
+  background: linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021124;
+  box-shadow: 0 10px 26px rgba(124,92,255,0.12);
+}
+.btn-ghost {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color:var(--muted); border:1px solid rgba(255,255,255,0.03);
+}
+.btn-accent { background: linear-gradient(90deg,#ff8ab3,#ffd166); color:#021124; }
+.btn-success { background: var(--success); color:#021124; }
+.btn:hover{ transform:translateY(-4px) }
 
-        /* Input Area */
-        .input-card {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.01));
-            border-radius: 14px;
-            padding: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
+/* actions row */
+.actions { display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap }
+.share-preview { display:flex; align-items:center; gap:8px; margin-left:auto; }
 
-        textarea {
-            width: 100%;
-            min-height: 170px;
-            resize: vertical;
-            max-height: 38vh;
-            border-radius: 12px;
-            padding: 16px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(0, 0, 0, 0.02));
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            color: var(--text-primary);
-            font-size: 15px;
-            line-height: 1.45;
-            outline: none;
-            caret-color: var(--accent2);
-            transition: box-shadow .18s ease, transform .12s ease;
-            font-family: inherit;
-        }
+/* right column: profile & stats */
+.side {
+  padding:16px; border-radius:16px; background: linear-gradient(180deg, rgba(255,255,255,0.014), rgba(255,255,255,0.008));
+  border:1px solid rgba(255,255,255,0.03);
+}
+.profile {
+  display:flex; gap:12px; align-items:center;
+}
+.avatar {
+  width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
+  background: linear-gradient(135deg,var(--accent1),var(--accent2)); color:#021124; font-size:18px;
+}
+.meta h3{ margin:0; font-size:18px; font-weight:800 }
+.meta small{ display:block; color:var(--muted); margin-top:6px }
 
-        textarea:focus {
-            box-shadow: 0 8px 30px rgba(124, 92, 255, 0.08);
-            transform: translateY(-2px);
-        }
+/* stats */
+.stats { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap }
+.stat { flex:1; min-width:110px; background:var(--glass-2); padding:10px; border-radius:12px; text-align:center; border:1px solid rgba(255,255,255,0.02) }
+.stat h4{ margin:0; font-size:18px }
+.stat p{ margin:6px 0 0; color:var(--muted); font-size:13px }
 
-        /* Buttons & Actions */
-        .actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
+/* messages list (chat bubbles) */
+.messages { margin-top:12px; padding:12px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent); max-height:46vh; overflow:auto; border:1px solid rgba(255,255,255,0.02) }
+.bubble { display:inline-block; padding:12px 14px; border-radius:14px; margin:10px 6px; line-height:1.45; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); box-shadow: 0 6px 18px rgba(2,6,23,0.45); max-width:86%;}
+.bubble.self { margin-left:auto; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021124; font-weight:700; }
+.meta-time{ display:block; font-size:12px; color:var(--muted); margin-top:8px; text-align:right; }
 
-        .btn {
-            background: linear-gradient(90deg, var(--accent1), var(--accent2));
-            border: none;
-            padding: 10px 16px;
-            border-radius: 12px;
-            color: #021124;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 8px 18px rgba(124, 92, 255, 0.12), inset 0 -2px 6px rgba(255, 255, 255, 0.06);
-            transition: transform .14s cubic-bezier(.2, .9, .3, 1), box-shadow .14s;
-            display: inline-flex;
-            gap: 10px;
-            align-items: center;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-        }
+/* nav tabs (blend of both) */
+.nav-tabs { display:flex; gap:10px; justify-content:center; margin-bottom:8px; margin-top:6px; flex-wrap:wrap }
+.nav-tab { padding:10px 18px; border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; border:1px solid rgba(255,255,255,0.03); font-weight:700 }
+.nav-tab.active { background: linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021124; box-shadow:0 10px 26px rgba(124,92,255,0.08) }
 
-        .btn:hover {
-            transform: translateY(-4px);
-        }
+/* thank-you overlay (from earlier build + deepseek) */
+.overlay {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:22px; z-index:6;
+  background: linear-gradient(90deg, rgba(2,6,23,0.6), rgba(2,6,23,0.42)); opacity:0; pointer-events:none; transition:opacity .24s ease;
+}
+.overlay.show{ opacity:1; pointer-events:auto }
+.thanks {
+  background: linear-gradient(135deg,#07203c,#062230); padding:22px 22px; border-radius:14px; text-align:center; width:min(560px,94%); border:1px solid rgba(255,255,255,0.03)
+}
+.check { width:84px; height:84px; border-radius:18px; display:grid; place-items:center; margin:0 auto 12px; background: linear-gradient(135deg,var(--accent2),var(--accent1)); box-shadow:0 10px 30px rgba(0,0,0,0.5) }
+.thanks h2{ margin:6px 0 0; font-size:20px }
+.thanks p{ color:var(--muted); margin:8px 0 12px }
 
-        .btn.ghost {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-            color: var(--muted);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow: none;
-            font-weight: 600;
-        }
+/* confetti */
+.confetti { position:absolute; inset:0; pointer-events:none; z-index:7 }
 
-        .btn.small {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 10px;
-        }
+/* share link card (from deepseek) */
+.share-box { margin-top:12px; display:flex; gap:8px; align-items:center; background:rgba(255,255,255,0.02); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.02) }
+.share-box input{ flex:1; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); background:transparent; color: #eaf3ff; outline:none }
 
-        .btn.danger {
-            background: linear-gradient(90deg, var(--danger), #ff6b81);
-        }
+/* footer */
+footer { text-align:center; margin-top:18px; color:var(--muted); font-size:13px }
 
-        /* Share Link */
-        .share-link {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-left: auto;
-        }
+/* responsiveness */
+@media (max-width:768px){
+  .avatar{ width:54px; height:54px }
+  .grid{ gap:12px }
+  .messages{ max-height:40vh }
+}
+@media (max-width:480px){
+  .logo{ font-size:1.8rem }
+  textarea#question-input{ min-height:140px }
+}
 
-        /* Side Panel */
-        .side {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.01));
-            padding: 18px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            height: 100%;
-        }
-
-        .profile {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .avatar {
-            width: 54px;
-            height: 54px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-            font-weight: 800;
-            color: var(--accent1);
-            font-family: "Poppins";
-        }
-
-        .meta small {
-            display: block;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .meta h3 {
-            margin: 0;
-            font-size: 16px;
-        }
-
-        .meta .link {
-            margin-top: 8px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .chip {
-            background: var(--glass-2);
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: 13px;
-            color: var(--muted);
-            border: 1px solid rgba(255, 255, 255, 0.02);
-        }
-
-        /* Stats */
-        .stats {
-            margin-top: 16px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            flex: 1;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(0, 0, 0, 0.02));
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .stat h4 {
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .stat p {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        /* Overlay */
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.45));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 22px;
-            z-index: 5;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .28s ease;
-        }
-
-        .overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .thanks {
-            background: linear-gradient(135deg, #07203c, #062230);
-            border-radius: 14px;
-            padding: 26px;
-            text-align: center;
-            width: min(520px, 92%);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transform: translateY(6px);
-            animation: pop .36s cubic-bezier(.16, .8, .24, 1);
-        }
-
-        @keyframes pop {
-            from {
-                transform: translateY(10px) scale(.98);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-
-        .check {
-            width: 84px;
-            height: 84px;
-            border-radius: 24px;
-            margin: 0 auto 12px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, var(--accent2), var(--accent1));
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .check svg {
-            filter: drop-shadow(0 6px 12px rgba(124, 92, 255, 0.14));
-            transform: scale(.95);
-        }
-
-        .thanks h2 {
-            margin: 6px 0 0;
-            font-size: 20px;
-        }
-
-        .thanks p {
-            color: var(--muted);
-            margin: 8px 0 16px;
-        }
-
-        /* Confetti */
-        .confetti {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 6;
-        }
-
-        /* Messages View */
-        .view-header {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .messages {
-            padding: 12px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.00));
-            border-radius: 12px;
-            max-height: 60vh;
-            overflow: auto;
-            border: 1px solid rgba(255, 255, 255, 0.02);
-        }
-
-        .bubble {
-            max-width: 82%;
-            padding: 12px 14px;
-            border-radius: 14px;
-            margin: 10px 6px;
-            display: inline-block;
-            line-height: 1.4;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.45);
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .bubble.self {
-            margin-left: auto;
-            background: linear-gradient(90deg, var(--accent1), var(--accent2));
-            color: #021124;
-            font-weight: 600;
-        }
-
-        .meta-time {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 6px;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            color: var(--muted);
-            margin-top: 18px;
-            font-size: 13px;
-            opacity: .95;
-        }
-
-        footer strong {
-            color: var(--accent2);
-            font-weight: 700;
-        }
-
-        /* Utilities */
-        .muted {
-            color: var(--muted);
-        }
-
-        .copy-ok {
-            font-size: 13px;
-            color: var(--success);
-            margin-left: 6px;
-        }
-
-        .nolink {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .emoji {
-            font-size: 1.2rem;
-            animation: pulse 1.5s ease infinite;
-            display: inline-block;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-    </style>
+</style>
 </head>
 <body>
-    <div class="bg-anim"></div>
-    
-    <!-- Floating particles -->
-    <div class="particle" style="width:80px;height:80px;left:6%;top:12%;background:radial-gradient(circle,var(--accent1),transparent)"></div>
-    <div class="particle" style="width:110px;height:110px;left:78%;top:72%;background:radial-gradient(circle,var(--accent2),transparent)"></div>
 
-    <div class="wrap">
-        <div class="card" id="mainCard">
-            <!-- LEFT: input and view toggles -->
-            <div>
-                <div class="brand">
-                    <div class="logo" id="logo">TB</div>
-                    <div>
-                        <h1 id="siteTitle">TruthBox</h1>
-                        <p class="lead">Ask anything — totally anonymous. No sign-up. No traces. Keep it real.</p>
-                    </div>
-                </div>
+<div class="bg-animated"></div>
+<div class="ribbon"></div>
+<div class="particles" id="particles"></div>
 
-                <div class="input-card" aria-live="polite">
-                    <label for="qbox" style="display:block;margin-bottom:8px;font-weight:600">Your anonymous question</label>
-                    <textarea id="qbox" placeholder="Type your question or message here… keep it short & spicy if you want ✨"></textarea>
+<div class="container">
+  <header class="header">
+    <div class="logo" id="siteTitle">TruthBox</div>
+    <div class="tagline">Ask anything. Zero names. All real.</div>
+  </header>
 
-                    <div class="actions">
-                        <button class="btn" id="sendBtn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.9">
-                                <path d="M22 2L11 13" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg> 
-                            Send
-                        </button>
+  <div class="card grid" id="mainCard">
+    <!-- LEFT -->
+    <div class="left">
+      <!-- nav -->
+      <div class="nav-tabs" role="tablist" aria-label="Main navigation">
+        <div class="nav-tab active" data-tab="ask">Ask</div>
+        <div class="nav-tab" data-tab="view">View</div>
+      </div>
 
-                        <button class="btn ghost small" id="shareStatusBtn" title="Share to WhatsApp (open share dialog)">
-                            Share to WhatsApp Status
-                        </button>
+      <!-- ASK: input card -->
+      <div class="card input-area" id="ask-panel" role="region" aria-labelledby="askLabel">
+        <label id="askLabel" for="question-input">Your anonymous question</label>
+        <textarea id="question-input" placeholder="Type your question here… be honest. It's anonymous."></textarea>
 
-                        <div class="share-link">
-                            <div class="chip" id="sharePreview">mywebsite.com/victor404</div>
-                            <button class="btn ghost small" id="copyLinkBtn">Copy Link</button>
-                            <button class="btn small" id="shareWhatsBtn">Share Link</button>
-                        </div>
-                    </div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn btn-primary" id="send-btn" title="Send anonymously">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.95"><path d="M22 2L11 13" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#021124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Send Anonymously
+          </button>
 
-                    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-                        <small class="muted">Identity: <strong style="margin-left:6px">Hidden</strong></small>
-                        <small style="margin-left:auto;color:var(--muted)">(stored locally)</small>
-                    </div>
-                </div>
+          <button class="btn btn-ghost" id="status-share-btn" title="Share typed text to WhatsApp Status">Share to WhatsApp Status</button>
 
-                <!-- View messages area -->
-                <div style="margin-top:18px">
-                    <div class="view-header">
-                        <div>
-                            <h3 style="margin:0">View received questions</h3>
-                            <small class="muted">Your saved anonymous submissions (localStorage)</small>
-                        </div>
-                        <div style="display:flex;gap:8px;align-items:center">
-                            <button class="btn ghost small" id="refreshView">Refresh</button>
-                            <button class="btn small danger" id="clearAll">Clear All</button>
-                        </div>
-                    </div>
-
-                    <div class="messages" id="messages">
-                        <!-- Messages inserted here -->
-                        <div class="muted" style="padding:18px;text-align:center">No questions yet — they'll appear here after people send them.</div>
-                    </div>
-                </div>
+          <div class="share-preview" style="margin-left:auto">
+            <div class="share-box" id="sharePreview">
+              <input id="profileLinkInput" readonly value="https://mywebsite.com/victor404" aria-label="profile link">
+              <button class="btn btn-ghost" id="copyLinkBtn">Copy</button>
             </div>
-
-            <!-- RIGHT: profile + stats -->
-            <aside class="side">
-                <div class="profile">
-                    <div class="avatar" id="avatar">V4</div>
-                    <div class="meta">
-                        <h3 id="profileName">victor404</h3>
-                        <small class="muted">Public profile: <span id="profileLink">mywebsite.com/victor404</span></small>
-                        <div class="link">
-                            <div class="chip">Anonymous by default</div>
-                            <div class="chip" id="totalCount">0 received</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats" style="margin-top:18px">
-                    <div class="stat">
-                        <h4 id="statToday">0</h4>
-                        <p class="muted">This session</p>
-                    </div>
-                    <div class="stat">
-                        <h4 id="statTotal">0</h4>
-                        <p class="muted">All-time (local)</p>
-                    </div>
-                    <div class="stat">
-                        <h4 id="statLast">—</h4>
-                        <p class="muted">Last received</p>
-                    </div>
-                </div>
-
-                <div style="margin-top:18px;font-size:13px;color:var(--muted)">
-                    <strong>Quick tips</strong>
-                    <ul style="margin:10px 0 0;padding-left:18px;color:var(--muted);line-height:1.5">
-                        <li>Change site/profile slug in code (top vars) to customize link.</li>
-                        <li>Use "Share Link" to send your profile on WhatsApp.</li>
-                        <li>Data is stored only in your browser (localStorage).</li>
-                    </ul>
-                </div>
-
-                <footer>
-                    <div style="margin-top:18px">Made with <span class="emoji">❤️</span> by <strong>Victor404</strong></div>
-                </footer>
-            </aside>
-
-            <!-- Overlay thanks -->
-            <div class="overlay" id="overlay">
-                <div class="thanks" role="status" aria-live="polite">
-                    <div class="check" id="checkWrap">
-                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 6L9 17l-5-5" stroke="#021124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h2>Thank you — your question is anonymous</h2>
-                    <p>We saved your message locally. Share your profile link to get answers from others!</p>
-                    <div style="display:flex;gap:8px; justify-content:center; margin-top:12px">
-                        <button class="btn small" id="overlayClose">Close</button>
-                        <button class="btn ghost small" id="overlayShare">Share Link</button>
-                    </div>
-                </div>
-                <div class="confetti" id="confetti"></div>
-            </div>
+            <button class="btn btn-accent" id="shareLinkBtn">Share Link</button>
+          </div>
         </div>
+
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
+          <small style="color:var(--muted)"><strong>Identity:</strong> Hidden</small>
+          <small style="margin-left:auto;color:var(--muted)">Stored locally</small>
+        </div>
+
+        <!-- share profile reveal -->
+        <div class="share-box" id="shareBoxSmall" style="display:none;margin-top:12px">
+          <input id="profileLinkSmall" readonly value="https://mywebsite.com/victor404">
+          <button class="btn btn-ghost" id="copySmall">Copy</button>
+        </div>
+      </div>
+
+      <!-- THANK YOU (overlay alternative for accessibility) -->
+      <div class="card" id="thankCard" style="display:none;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--accent2),var(--accent1));display:grid;place-items:center;font-weight:800;color:#021124;">✓</div>
+        </div>
+        <h3 style="margin-bottom:8px">Thank you — your question is anonymous</h3>
+        <p style="color:var(--muted);margin-bottom:12px">Saved locally. Share your profile link so people can ask you more.</p>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button class="btn btn-primary" id="thankShare">Share Link</button>
+          <button class="btn btn-ghost" id="thankClose">Close</button>
+        </div>
+      </div>
+
+      <!-- VIEW: messages -->
+      <div class="card" id="view-panel" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h3 style="margin:0">Received Questions</h3>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" id="refreshBtn">Refresh</button>
+            <button class="btn btn-ghost" id="clearBtn">Clear All</button>
+          </div>
+        </div>
+        <div class="messages" id="messages">
+          <div class="muted" style="padding:16px;text-align:center;color:var(--muted)">No questions yet — they appear here after people send them.</div>
+        </div>
+      </div>
+
+      <footer style="margin-top:12px;text-align:center;color:var(--muted);font-size:13px">
+        Made with <span style="color:#ff6b6b">❤️</span> by <strong id="footerName">Victor404</strong>
+      </footer>
     </div>
 
-    <script>
-        /*
-          Enhanced TruthBox — single-file app
-          Combines the best features from both versions with improved UI/UX
-        */
-        (() => {
-            // === CONFIG - change these if you want to rename the site/profile quickly ===
-            const SITE_NAME = "TruthBox";         // visible site name
-            const PROFILE_SLUG = "victor404";     // used to simulate profile link mywebsite.com/slug
-            const STORAGE_KEY = "truthbox_" + PROFILE_SLUG + "_questions"; // localStorage key
-            const SITE_BASE = "https://mywebsite.com"; // change to actual domain later
+    <!-- RIGHT: profile & stats -->
+    <aside class="side">
+      <div class="profile">
+        <div class="avatar" id="avatar">V4</div>
+        <div class="meta">
+          <h3 id="profileName">victor404</h3>
+          <small id="profileLinkSmallText" style="color:var(--muted)">https://mywebsite.com/victor404</small>
+        </div>
+      </div>
 
-            // === UI references ===
-            const siteTitle = document.getElementById('siteTitle');
-            const logo = document.getElementById('logo');
-            const avatar = document.getElementById('avatar');
-            const profileName = document.getElementById('profileName');
-            const profileLink = document.getElementById('profileLink');
-            const sharePreview = document.getElementById('sharePreview');
-            const qbox = document.getElementById('qbox');
-            const sendBtn = document.getElementById('sendBtn');
-            const copyLinkBtn = document.getElementById('copyLinkBtn');
-            const shareWhatsBtn = document.getElementById('shareWhatsBtn');
-            const shareStatusBtn = document.getElementById('shareStatusBtn');
-            const messagesEl = document.getElementById('messages');
-            const totalCount = document.getElementById('totalCount');
-            const statTotal = document.getElementById('statTotal');
-            const statToday = document.getElementById('statToday');
-            const statLast = document.getElementById('statLast');
-            const overlay = document.getElementById('overlay');
-            const overlayClose = document.getElementById('overlayClose');
-            const overlayShare = document.getElementById('overlayShare');
-            const clearAll = document.getElementById('clearAll');
-            const refreshView = document.getElementById('refreshView');
-            const confettiEl = document.getElementById('confetti');
+      <div class="stats" aria-hidden="false">
+        <div class="stat">
+          <h4 id="statToday">0</h4>
+          <p>Today</p>
+        </div>
+        <div class="stat">
+          <h4 id="statTotal">0</h4>
+          <p>All-time (local)</p>
+        </div>
+        <div class="stat">
+          <h4 id="statLast">—</h4>
+          <p>Last received</p>
+        </div>
+      </div>
 
-            // Initialize UI with config
-            siteTitle.textContent = SITE_NAME;
-            logo.textContent = SITE_NAME.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
-            avatar.textContent = PROFILE_SLUG.slice(0, 3).toUpperCase();
-            profileName.textContent = PROFILE_SLUG;
-            profileLink.textContent = SITE_BASE + "/" + PROFILE_SLUG;
-            sharePreview.textContent = SITE_BASE + "/" + PROFILE_SLUG;
+      <div style="margin-top:12px">
+        <div style="font-weight:700;margin-bottom:8px">Quick tips</div>
+        <ul style="color:var(--muted);line-height:1.5;padding-left:18px">
+          <li>Change site/profile slug in the top config variables.</li>
+          <li>Data is saved to your browser only (localStorage).</li>
+          <li>Share link opens WhatsApp share dialog so people can ask you.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
 
-            // Helper: Get stored questions array
-            function getStored() {
-                try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
-                    if (!raw) return [];
-                    const parsed = JSON.parse(raw);
-                    if (!Array.isArray(parsed)) return [];
-                    return parsed;
-                } catch (e) {
-                    console.warn(e);
-                    return [];
-                }
-            }
+<!-- overlay thanks -->
+<div class="overlay" id="overlay">
+  <div class="thanks" role="status" aria-live="polite">
+    <div class="check">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+        <path d="M20 6L9 17l-5-5" stroke="#021124" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2>Thank you — your question is anonymous</h2>
+    <p>We saved your message locally. Share your profile link to get answers from others!</p>
+    <div style="display:flex;gap:8px; justify-content:center; margin-top:12px">
+      <button class="btn btn-primary" id="overlayShare">Share Link</button>
+      <button class="btn btn-ghost" id="overlayClose">Close</button>
+    </div>
+  </div>
+  <div class="confetti" id="confetti"></div>
+</div>
 
-            // Helper: Save questions
-            function saveStored(arr) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-            }
+<script>
+/*
+  TruthBox merged build
+  Edit these to rename the site or profile quickly
+*/
+(() => {
+  // ========= CONFIG =========
+  const SITE_NAME = "TruthBox";
+  const PROFILE_SLUG = "victor404";
+  const SITE_BASE = "https://mywebsite.com"; // simulate domain
+  const STORAGE_KEY = `truthbox_${PROFILE_SLUG}_questions`;
 
-            // Format time nicely
-            function niceTime(ts) {
-                const d = new Date(ts);
-                return d.toLocaleString();
-            }
+  // ========= ELEMENTS =========
+  const siteTitle = document.getElementById('siteTitle');
+  const profileNameEl = document.getElementById('profileName');
+  const profileLinkSmallText = document.getElementById('profileLinkSmallText');
+  const profileLinkInput = document.getElementById('profileLinkInput');
+  const profileLinkSmall = document.getElementById('profileLinkSmall');
+  const footerName = document.getElementById('footerName');
+  const avatar = document.getElementById('avatar');
 
-            // Render messages to view
-            function renderMessages() {
-                const arr = getStored();
-                messagesEl.innerHTML = "";
-                
-                if (!arr.length) {
-                    messagesEl.innerHTML = '<div class="muted" style="padding:18px;text-align:center">No questions yet — they will appear here.</div>';
-                    totalCount.textContent = '0 received';
-                    statTotal.textContent = '0';
-                    statToday.textContent = '0';
-                    statLast.textContent = '—';
-                    return;
-                }
+  const navTabs = document.querySelectorAll('.nav-tab');
+  const askPanel = document.getElementById('ask-panel');
+  const viewPanel = document.getElementById('view-panel');
+  const questionInput = document.getElementById('question-input');
+  const sendBtn = document.getElementById('send-btn');
+  const statusShareBtn = document.getElementById('status-share-btn');
+  const copyLinkBtn = document.getElementById('copyLinkBtn');
+  const shareLinkBtn = document.getElementById('shareLinkBtn');
+  const messagesEl = document.getElementById('messages');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const overlay = document.getElementById('overlay');
+  const overlayClose = document.getElementById('overlayClose');
+  const overlayShare = document.getElementById('overlayShare');
+  const confettiEl = document.getElementById('confetti');
+  const thankCard = document.getElementById('thankCard');
+  const thankClose = document.getElementById('thankClose');
+  const thankShare = document.getElementById('thankShare');
 
-                // Create message bubbles
-                arr.slice().reverse().forEach(item => {
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble';
-                    bubble.innerHTML = `<div>${escapeHtml(item.text)}</div><div class="meta-time muted">${niceTime(item.ts)}</div>`;
-                    messagesEl.appendChild(bubble);
-                });
+  const statToday = document.getElementById('statToday');
+  const statTotal = document.getElementById('statTotal');
+  const statLast = document.getElementById('statLast');
 
-                // Update stats
-                totalCount.textContent = arr.length + ' received';
-                statTotal.textContent = arr.length;
-                statLast.textContent = niceTime(arr[arr.length - 1].ts);
-                
-                // Today count
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
-                const todayCount = arr.filter(i => i.ts >= todayStart.getTime()).length;
-                statToday.textContent = todayCount;
-            }
+  // set UI text from config
+  siteTitle.textContent = SITE_NAME;
+  profileNameEl.textContent = PROFILE_SLUG;
+  profileLinkSmallText.textContent = `${SITE_BASE}/${PROFILE_SLUG}`;
+  profileLinkInput.value = `${SITE_BASE}/${PROFILE_SLUG}`;
+  if (profileLinkSmall) profileLinkSmall.value = `${SITE_BASE}/${PROFILE_SLUG}`;
+  footerName.textContent = PROFILE_SLUG;
+  avatar.textContent = PROFILE_SLUG.slice(0,3).toUpperCase();
 
-            // Escape HTML (security)
-            function escapeHtml(s) {
-                return String(s).replace(/[&<>"']/g, function(m) {
-                    return {
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#39;'
-                    }[m];
-                });
-            }
+  // ========== helpers ==========
+  function getStored(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch(e){ console.warn(e); return [] }
+  }
+  function saveStored(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)) }
+  function nowTs(){ return Date.now() }
+  function niceTime(ts){
+    const d = new Date(ts);
+    return d.toLocaleString();
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
 
-            // Send message
-            sendBtn.addEventListener('click', () => {
-                const text = qbox.value.trim();
-                if (!text) {
-                    qbox.focus();
-                    qbox.style.boxShadow = "0 8px 30px rgba(255,80,80,0.08)";
-                    setTimeout(() => qbox.style.boxShadow = "", 900);
-                    return;
-                }
-                
-                // Store anonymous message (no identity)
-                const arr = getStored();
-                arr.push({
-                    text: text,
-                    ts: Date.now()
-                });
-                saveStored(arr);
+  // ========== render messages ==========
+  function renderMessages(){
+    const arr = getStored();
+    messagesEl.innerHTML = '';
+    if (!arr.length){
+      messagesEl.innerHTML = '<div class="muted" style="padding:18px;text-align:center;color:var(--muted)">No questions yet — they appear here after people send them.</div>';
+      statTotal.textContent = '0';
+      statToday.textContent = '0';
+      statLast.textContent = '—';
+      return;
+    }
+    // show newest first
+    arr.slice().reverse().forEach(item=>{
+      const el = document.createElement('div');
+      // alternate bubble styles for variety
+      const bubbleClass = Math.random() > 0.7 ? 'bubble self' : 'bubble';
+      el.className = bubbleClass;
+      el.innerHTML = `<div>${escapeHtml(item.text)}</div><div class="meta-time">${niceTime(item.ts)}</div>`;
+      messagesEl.appendChild(el);
+    });
+    statTotal.textContent = arr.length;
+    statLast.textContent = niceTime(arr[arr.length-1].ts);
+    // today count
+    const start = new Date(); start.setHours(0,0,0,0);
+    const todayCount = arr.filter(i=>i.ts >= start.getTime()).length;
+    statToday.textContent = todayCount;
+  }
 
-                // Reset input
-                qbox.value = "";
+  // ========== send message ==========
+  sendBtn.addEventListener('click', ()=>{
+    const text = questionInput.value.trim();
+    if (!text){
+      // subtle shake + focus
+      questionInput.style.boxShadow = "0 8px 30px rgba(255,80,80,0.08)";
+      setTimeout(()=> questionInput.style.boxShadow='',900);
+      questionInput.focus();
+      return;
+    }
+    // store anonymously
+    const arr = getStored();
+    arr.push({ text: text, ts: nowTs() });
+    saveStored(arr);
 
-                // Show thanks overlay + confetti
-                showOverlay();
+    // clear input
+    questionInput.value = "";
 
-                // Refresh view
-                renderMessages();
-            });
+    // show thank card & overlay/confetti
+    showInlineThanks();
+    showOverlay();
 
-            // Copy profile link
-            copyLinkBtn.addEventListener('click', async () => {
-                const link = SITE_BASE + "/" + PROFILE_SLUG;
-                try {
-                    await navigator.clipboard.writeText(link);
-                    copyLinkBtn.textContent = 'Copied!';
-                    setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 1400);
-                } catch (e) {
-                    // Fallback for older browsers
-                    const tmp = document.createElement('textarea');
-                    tmp.value = link;
-                    document.body.appendChild(tmp);
-                    tmp.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tmp);
-                    copyLinkBtn.textContent = 'Copied!';
-                    setTimeout(() => copyLinkBtn.textContent = 'Copy Link', 1400);
-                }
-            });
+    // refresh messages
+    renderMessages();
+  });
 
-            // Share profile via WhatsApp
-            shareWhatsBtn.addEventListener('click', () => {
-                const link = SITE_BASE + "/" + PROFILE_SLUG;
-                const text = encodeURIComponent("Check my TruthBox profile: " + link);
-                const wa = "https://api.whatsapp.com/send?text=" + text;
-                window.open(wa, '_blank');
-            });
+  // Ctrl/Cmd + Enter send
+  questionInput.addEventListener('keydown', (e)=>{ if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendBtn.click(); });
 
-            // Share text to WhatsApp status
-            shareStatusBtn.addEventListener('click', () => {
-                const text = qbox.value.trim();
-                if (!text) {
-                    qbox.focus();
-                    return;
-                }
-                const encoded = encodeURIComponent(text + "\n\n— sent anonymously via " + SITE_NAME);
-                const wa = "https://api.whatsapp.com/send?text=" + encoded;
-                window.open(wa, '_blank');
-            });
+  // ========== share to WhatsApp status (user types text and opens WA) ==========
+  statusShareBtn.addEventListener('click', ()=>{
+    const text = questionInput.value.trim();
+    if (!text){
+      questionInput.focus();
+      return;
+    }
+    const encoded = encodeURIComponent(text + "\n\n— sent anonymously via " + SITE_NAME);
+    // open WA share (user can choose status or chat)
+    const waURL = `https://api.whatsapp.com/send?text=${encoded}`;
+    window.open(waURL, '_blank');
+  });
 
-            // Overlay controls
-            overlayClose.addEventListener('click', () => hideOverlay());
-            overlayShare.addEventListener('click', () => {
-                const link = SITE_BASE + "/" + PROFILE_SLUG;
-                const text = encodeURIComponent("Find my anonymous Q&A: " + link);
-                window.open("https://api.whatsapp.com/send?text=" + text, '_blank');
-            });
+  // ========== copy / share profile link ==========
+  copyLinkBtn.addEventListener('click', async ()=>{
+    const link = `${SITE_BASE}/${PROFILE_SLUG}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      copyLinkBtn.textContent = 'Copied!';
+      setTimeout(()=> copyLinkBtn.textContent = 'Copy', 1600);
+    } catch(e){
+      // fallback
+      const tmp = document.createElement('textarea'); tmp.value = link; document.body.appendChild(tmp); tmp.select();
+      document.execCommand('copy'); document.body.removeChild(tmp);
+      copyLinkBtn.textContent = 'Copied!';
+      setTimeout(()=> copyLinkBtn.textContent = 'Copy', 1600);
+    }
+  });
 
-            // Clear all messages
-            clearAll.addEventListener('click', () => {
-                if (!confirm('Clear all saved anonymous questions from this browser? This cannot be undone.')) return;
-                localStorage.removeItem(STORAGE_KEY);
-                renderMessages();
-            });
+  shareLinkBtn.addEventListener('click', ()=>{
+    const link = `${SITE_BASE}/${PROFILE_SLUG}`;
+    const text = encodeURIComponent(`Check my anonymous box: ${link}`);
+    // open WA share dialog
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  });
 
-            // Refresh view
-            refreshView.addEventListener('click', renderMessages);
+  // thank card share
+  thankShare.addEventListener('click', ()=> shareLinkBtn.click());
+  thankClose.addEventListener('click', ()=> thankCard.style.display = 'none');
 
-            // Overlay animation + confetti
-            function showOverlay() {
-                overlay.classList.add('show');
-                launchConfetti();
-                // Hide after 4.2s automatically
-                setTimeout(() => {
-                    overlay.classList.remove('show');
-                }, 4200);
-            }
+  // overlay control
+  overlayClose.addEventListener('click', ()=> hideOverlay());
+  overlayShare.addEventListener('click', ()=> shareLinkBtn.click());
 
-            function hideOverlay() {
-                overlay.classList.remove('show');
-            }
+  // ========== clear / refresh ==========
+  clearBtn.addEventListener('click', ()=>{
+    if (!confirm('Clear all saved anonymous questions from this browser? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    renderMessages();
+  });
+  refreshBtn.addEventListener('click', renderMessages);
 
-            // Confetti effect
-            function launchConfetti() {
-                confettiEl.innerHTML = '';
-                const colors = ['#7c5cff', '#00d4ff', '#ff8ab3', '#ffd166', '#7ee787'];
-                
-                for (let i = 0; i < 22; i++) {
-                    const el = document.createElement('div');
-                    const size = 6 + Math.random() * 12;
-                    el.style.width = size + 'px';
-                    el.style.height = Math.max(4, size / 2) + 'px';
-                    el.style.position = 'absolute';
-                    el.style.left = (30 + Math.random() * 60) + '%';
-                    el.style.top = (30 + Math.random() * 20) + '%';
-                    el.style.opacity = 0.95;
-                    el.style.borderRadius = '3px';
-                    el.style.transform = `rotate(${Math.random() * 360}deg)`;
-                    el.style.background = colors[i % colors.length];
-                    confettiEl.appendChild(el);
-                    
-                    // Animate individual pieces
-                    animateConfetti(el);
-                }
-                
-                // Remove after animation completes
-                setTimeout(() => confettiEl.innerHTML = '', 3800);
-            }
+  // ========== tabs ==========
+  navTabs.forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelector('.nav-tab.active').classList.remove('active');
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      if (tab === 'ask'){
+        askPanel.style.display = 'block';
+        viewPanel.style.display = 'none';
+      } else {
+        askPanel.style.display = 'none';
+        viewPanel.style.display = 'block';
+        renderMessages();
+      }
+    });
+  });
 
-            function animateConfetti(el) {
-                const dx = (Math.random() - 0.5) * 300;
-                const dy = 120 + Math.random() * 240;
-                el.animate([
-                    { transform: el.style.transform + ' translateY(0) translateX(0) scale(1)', opacity: 1 },
-                    { transform: el.style.transform + ` translateY(${dy}px) translateX(${dx}px) rotate(360deg) scale(.9)`, opacity: 0.02 }
-                ], {
-                    duration: 1800 + Math.random() * 1600,
-                    easing: 'cubic-bezier(.2,.7,.2,1)',
-                    iterations: 1
-                });
-            }
+  // ========== overlay + confetti ==========
+  function showOverlay(){
+    overlay.classList.add('show');
+    launchConfetti();
+    // auto-hide after 4s
+    setTimeout(()=> overlay.classList.remove('show'), 4200);
+  }
+  function hideOverlay(){ overlay.classList.remove('show') }
 
-            // Keyboard shortcut: Ctrl+Enter to send
-            qbox.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    sendBtn.click();
-                }
-            });
+  function launchConfetti(){
+    confettiEl.innerHTML = '';
+    const colors = ['#7c5cff','#00d4ff','#ff8ab3','#ffd166','#7ee787'];
+    for (let i=0;i<24;i++){
+      const c = document.createElement('div');
+      const s = 6 + Math.random()*14;
+      c.style.width = s + 'px'; c.style.height = Math.max(4, s/2) + 'px';
+      c.style.position = 'absolute';
+      c.style.left = (25 + Math.random()*50) + '%';
+      c.style.top = (28 + Math.random()*20) + '%';
+      c.style.opacity = 0.98;
+      c.style.borderRadius = '3px';
+      c.style.transform = `rotate(${Math.random()*360}deg)`;
+      c.style.background = colors[i % colors.length];
+      confettiEl.appendChild(c);
+      animateConfetti(c);
+    }
+    setTimeout(()=> confettiEl.innerHTML = '', 3800);
+  }
+  function animateConfetti(el){
+    const dx = (Math.random()-0.5) * 300;
+    const dy = 120 + Math.random()*240;
+    el.animate([
+      { transform: el.style.transform + ' translateY(0) translateX(0) scale(1)', opacity:1 },
+      { transform: el.style.transform + ` translateY(${dy}px) translateX(${dx}px) rotate(360deg) scale(.9)`, opacity:0.02 }
+    ], { duration: 1500 + Math.random()*1600, easing: 'cubic-bezier(.2,.7,.2,1)' });
+  }
 
-            // UX: Show copy confirmation when clicking preview
-            sharePreview.addEventListener('click', async () => {
-                const link = SITE_BASE + "/" + PROFILE_SLUG;
-                try {
-                    await navigator.clipboard.writeText(link);
-                    sharePreview.textContent = 'Link copied!';
-                    setTimeout(() => sharePreview.textContent = link, 1600);
-                } catch (e) {}
-            });
+  // inline thank card (accessible non-overlay)
+  function showInlineThanks(){
+    thankCard.style.display = 'block';
+    setTimeout(()=> thankCard.style.display = 'none', 4200);
+  }
 
-            // Small performance: lazy load animated shape behind logo
-            setTimeout(() => {
-                const g = document.createElement('div');
-                g.style.width = '44px';
-                g.style.height = '44px';
-                g.style.borderRadius = '10px';
-                g.style.position = 'absolute';
-                g.style.left = '20px';
-                g.style.top = '20px';
-                g.style.opacity = '0.06';
-                g.style.background = 'conic-gradient(from 160deg, rgba(124,92,255,0.9), rgba(0,212,255,0.9))';
-                document.body.appendChild(g);
-                g.animate([
-                    { transform: 'scale(1)' },
-                    { transform: 'scale(1.14)' }
-                ], {
-                    duration: 8000,
-                    iterations: Infinity,
-                    direction: 'alternate'
-                });
-                setTimeout(() => g.remove(), 9000);
-            }, 1000);
+  // ========== render on load ==========
+  function init(){
+    // particles (deepseek) - lightweight
+    createParticles();
+    // ensure ask is visible
+    askPanel.style.display = 'block';
+    viewPanel.style.display = 'none';
+    renderMessages();
+    // make site aesthetic small animation
+    lazyAnimateLogo();
+    // copy preview click to copy
+    document.getElementById('profileLinkInput').addEventListener('click', async ()=>{
+      const link = `${SITE_BASE}/${PROFILE_SLUG}`;
+      try{ await navigator.clipboard.writeText(link); document.getElementById('profileLinkInput').value = 'Link copied!' ; setTimeout(()=> document.getElementById('profileLinkInput').value = link, 1400);}catch(e){}
+    });
+  }
 
-            // Accessibility: Close overlay on Escape
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') hideOverlay();
-            });
+  // ========== particles maker (Deepseek style) ==========
+  function createParticles(){
+    const container = document.getElementById('particles');
+    if (!container) return;
+    const count = window.innerWidth < 768 ? 26 : 48;
+    for (let i=0;i<count;i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random()*10 + 2;
+      const left = Math.random()*100;
+      const top = Math.random()*100;
+      const opacity = Math.random()*0.45 + 0.05;
+      p.style.width = `${size}px`; p.style.height = `${size}px`;
+      p.style.left = `${left}%`; p.style.top = `${top}%`;
+      p.style.opacity = opacity;
+      p.style.background = `radial-gradient(circle, rgba(255,255,255,${0.6*opacity}) 0%, rgba(255,255,255,0.02) 60%)`;
+      p.style.animation = `float ${10 + Math.random()*18}s ease-in-out ${Math.random()*5}s infinite`;
+      container.appendChild(p);
+    }
+    const style = document.createElement('style');
+    style.textContent = `@keyframes float { 0%{transform:translate(0,0)}25%{transform:translate(5px,5px)}50%{transform:translate(10px,0)}75%{transform:translate(5px,-5px)}100%{transform:translate(0,0)} }`;
+    document.head.appendChild(style);
+  }
 
-            // Performance: Pre-binding touchstart for mobile
-            document.addEventListener('touchstart', () => {}, { passive: true });
+  // tiny flourish for logo
+  function lazyAnimateLogo(){
+    const logo = document.getElementById('siteTitle');
+    if(!logo) return;
+    logo.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-4px)' }, { transform:'translateY(0)'}], { duration:1800, iterations: Infinity, easing:'ease-in-out' });
+  }
 
-            // Progressive enhancement: Drag and drop to paste text
-            qbox.addEventListener('drop', (ev) => {
-                ev.preventDefault();
-                const t = ev.dataTransfer.getData('text/plain');
-                if (t) qbox.value = (qbox.value + "\n" + t).trim();
-            });
-            qbox.addEventListener('dragover', (ev) => ev.preventDefault());
+  // ========== utility: export CSV (optional extra) ==========
+  window.exportTruthboxCSV = function(){
+    const rows = getStored();
+    if (!rows.length) { alert('No saved questions'); return; }
+    let csv = 'text,ts\\n';
+    rows.forEach(r => { csv += '"' + String(r.text).replace(/"/g,'""') + '",' + r.ts + '\\n'; });
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${PROFILE_SLUG}_questions.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  };
 
-            // Initial render
-            renderMessages();
+  // init app
+  document.addEventListener('DOMContentLoaded', init);
 
-            // Expose quick dev helper on window for debugging
-            window.__truthbox = {
-                STORAGE_KEY,
-                SITE_NAME,
-                PROFILE_SLUG,
-                SITE_BASE,
-                getStored,
-                saveStored,
-                renderMessages
-            };
-        })();
-    </script>
+  // expose some dev helpers (for Acode debug)
+  window.__TruthBox = { SITE_NAME, PROFILE_SLUG, SITE_BASE, STORAGE_KEY, getStored, saveStored, renderMessages, exportTruthboxCSV };
+
+})();
+</script>
 </body>
 </html>
